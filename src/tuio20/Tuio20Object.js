@@ -17,6 +17,18 @@ export class Tuio20Object {
         this._state = TuioState.Idle;
     }
 
+    get startTime(){
+        return this._startTime;
+    }
+
+    get currentTime(){
+        return this._currentTime;
+    }
+
+    get sessionId(){
+        return this._sessionId;
+    }
+
     get token(){
         return this._token;
     }
@@ -31,6 +43,10 @@ export class Tuio20Object {
 
     get symbol(){
         return this._symbol;
+    }
+
+    get state(){
+        return this._state;
     }
 
     setTuioToken(token){
