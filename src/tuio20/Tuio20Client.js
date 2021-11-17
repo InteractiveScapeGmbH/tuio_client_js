@@ -21,15 +21,18 @@ export class Tuio20Client {
         this._frmMessage = null;
         this._otherMessages = [];
 
-        this._currentFrameId = 0;
-        this._currentFrameTime = null;
+        this._bundleFrameId = 0;
+        this._nextFrameId = 0;
+
+        this._prevFrameId = 0;
+        this._prevFrameTime = null;
 
         this._dim = null;
         this._source = null;
     }
 
     connect(){
-        this._currentFrameTime = new TuioTime(0, 0);
+        this._prevFrameTime = new TuioTime(0, 0);
         this._tuioReceiver.connect();
     }
 
@@ -101,23 +104,28 @@ export class Tuio20Client {
     }
 
     _onFrm(oscMessage){
-        this._otherMessages = [];
-        this._frmMessage = oscMessage;
+        this._bundleFrameId = oscMessage.args[0].value;
+        if(this._bundleFrameId > this._nextFrameId){
+            this._otherMessages = [];
+            this._nextFrameId = this._bundleFrameId;
+            this._frmMessage = oscMessage;
+        }
     }
 
     _onOther(oscMessage){
+        if(this._bundleFrameId !== this._nextFrameId){
+            return;
+        }
         this._otherMessages.push(oscMessage);
     }
 
     _onAlv(oscMessage){
-        if(this._frmMessage === null){
+        if(this._frmMessage === null || this._bundleFrameId !== this._nextFrameId){
             return;
         }
         let [frameId, frameTime, dim, source] = this._frmMessage.args.map(arg => arg.value);
         let currentFrameTime = TuioTime.fromOscTime(frameTime);
-        if(frameId >= this._currentFrameId || frameId === 0 || currentFrameTime.subtract(this._currentFrameTime).getTotalMilliseconds() >= 1000){
-            this._currentFrameTime = currentFrameTime;
-            this._currentFrameId = frameId;
+        if(frameId >= this._prevFrameId || frameId === 0 || currentFrameTime.subtract(this._prevFrameTime).getTotalMilliseconds() >= 1000){
             this._dim = dim;
             this._source = source;
             let currentSessionIds = new Set(this._tuioObjects.keys());
@@ -127,7 +135,7 @@ export class Tuio20Client {
             let updatedSessionIds = new Set();
             let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
             for (let sessionId of newSessionIds){
-                let tuioObject = new Tuio20Object(this._currentFrameTime, sessionId);
+                let tuioObject = new Tuio20Object(currentFrameTime, sessionId);
                 this._tuioObjects.set(sessionId, tuioObject);
             }
             for (let otherOscMessage of this._otherMessages){
@@ -140,11 +148,11 @@ export class Tuio20Client {
                         let tuioObject = this._tuioObjects.get(sId);
                         if(tuioObject.token === null){
                             addedSessionIds.add(sId);
-                            tuioObject.setTuioToken(new Tuio20Token(this._currentFrameTime, tuioObject, tuId, cId, xPos, yPos, angle, xVel, yVel, aVel, mAcc, rAcc));
+                            tuioObject.setTuioToken(new Tuio20Token(currentFrameTime, tuioObject, tuId, cId, xPos, yPos, angle, xVel, yVel, aVel, mAcc, rAcc));
                         } else {
                             if(tuioObject.token._hasChanged(tuId, cId, xPos, yPos, angle, xVel, yVel, aVel, mAcc, rAcc)){
                                 updatedSessionIds.add(sId);
-                                tuioObject.token._update(this._currentFrameTime, tuId, cId, xPos, yPos, angle, xVel, yVel, aVel, mAcc, rAcc);
+                                tuioObject.token._update(currentFrameTime, tuId, cId, xPos, yPos, angle, xVel, yVel, aVel, mAcc, rAcc);
                             }
                         }
                     }
@@ -156,11 +164,11 @@ export class Tuio20Client {
                         let tuioObject = this._tuioObjects.get(sId);
                         if(tuioObject.pointer === null){
                             addedSessionIds.add(sId);
-                            tuioObject.setTuioPointer(new Tuio20Pointer(this._currentFrameTime, tuioObject, tuId, cId, xPos, yPos, angle, shear, radius, press, xVel, yVel, pVel, mAcc, pAcc));
+                            tuioObject.setTuioPointer(new Tuio20Pointer(currentFrameTime, tuioObject, tuId, cId, xPos, yPos, angle, shear, radius, press, xVel, yVel, pVel, mAcc, pAcc));
                         } else {
                             if(tuioObject.pointer._hasChanged(tuId, cId, xPos, yPos, angle, shear, radius, press, xVel, yVel, pVel, mAcc, pAcc)){
                                 updatedSessionIds.add(sId);
-                                tuioObject.pointer._update(this._currentFrameTime, tuId, cId, xPos, yPos, angle, shear, radius, press, xVel, yVel, pVel, mAcc, pAcc);
+                                tuioObject.pointer._update(currentFrameTime, tuId, cId, xPos, yPos, angle, shear, radius, press, xVel, yVel, pVel, mAcc, pAcc);
                             }
                         }
                     }
@@ -172,11 +180,11 @@ export class Tuio20Client {
                         let tuioObject = this._tuioObjects.get(sId);
                         if(tuioObject.bounds === null){
                             addedSessionIds.add(sId);
-                            tuioObject.setTuioBounds(new Tuio20Bounds(this._currentFrameTime, tuioObject, xPos, yPos, angle, width, height, area, xVel, yVel, aVel, mAcc, rAcc));
+                            tuioObject.setTuioBounds(new Tuio20Bounds(currentFrameTime, tuioObject, xPos, yPos, angle, width, height, area, xVel, yVel, aVel, mAcc, rAcc));
                         } else {
                             if(tuioObject.bounds._hasChanged(xPos, yPos, angle, width, height, area, xVel, yVel, aVel, mAcc, rAcc)){
                                 updatedSessionIds.add(sId);
-                                tuioObject.bounds._update(this._currentFrameTime, xPos, yPos, angle, width, height, area, xVel, yVel, aVel, mAcc, rAcc);
+                                tuioObject.bounds._update(currentFrameTime, xPos, yPos, angle, width, height, area, xVel, yVel, aVel, mAcc, rAcc);
                             }
                         }
                     }
@@ -186,11 +194,11 @@ export class Tuio20Client {
                         let tuioObject = this._tuioObjects.get(sId);
                         if(tuioObject.symbol === null){
                             addedSessionIds.add(sId);
-                            tuioObject.setTuioSymbol(new Tuio20Symbol(this._currentFrameTime, tuioObject, tuId, cId, group, data));
+                            tuioObject.setTuioSymbol(new Tuio20Symbol(currentFrameTime, tuioObject, tuId, cId, group, data));
                         } else {
                             if(tuioObject.symbol._hasChanged(tuId, cId, group, data)){
                                 updatedSessionIds.add(sId);
-                                tuioObject.symbol._update(this._currentFrameTime, tuId, cId, group, data);
+                                tuioObject.symbol._update(currentFrameTime, tuId, cId, group, data);
                             }
                         }
                     }
@@ -211,16 +219,18 @@ export class Tuio20Client {
             }
             for (let sessionId of removedSessionIds){
                 let tuioObject = this._tuioObjects.get(sessionId);
-                tuioObject._remove(this._currentFrameTime);
+                tuioObject._remove(currentFrameTime);
                 for (let tuioListener of this._tuioListeners){
                     tuioListener.tuioRemove(tuioObject);
                 }
                 this._tuioObjects.delete(sessionId);
             }
             for (let tuioListener of this._tuioListeners){
-                tuioListener.tuioRefresh(this._currentFrameTime);
+                tuioListener.tuioRefresh(currentFrameTime);
             }
         }
+        this._prevFrameTime = currentFrameTime;
+        this._prevFrameId = frameId;
         this._frmMessage = null;
     }
 }
