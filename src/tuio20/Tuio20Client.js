@@ -15,7 +15,10 @@ export class Tuio20Client {
         this._tuioReceiver.addMessageListener("/tuio2/bnd", this._onOther.bind(this));
         this._tuioReceiver.addMessageListener("/tuio2/sym", this._onOther.bind(this));
         this._tuioListeners = [];
+        this._initialize_fields();
+    }
 
+    _initialize_fields() {
         this._tuioObjects = new Map();
 
         this._frmMessage = null;
@@ -33,6 +36,7 @@ export class Tuio20Client {
 
     connect(){
         this._prevFrameTime = new TuioTime(0, 0);
+        this._initialize_fields();
         this._tuioReceiver.connect();
     }
 
