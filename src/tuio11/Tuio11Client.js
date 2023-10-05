@@ -186,11 +186,11 @@ export class Tuio11Client {
                                     }
                                 }
                             } else {
-                                let cursorId = _tuioCursors.size;
-                                if (_freeCursorIds.size > 0)
+                                let cursorId = this._tuioCursors.size;
+                                if (this._freeCursorIds.size > 0)
                                 {
-                                    cursorId = _freeCursorIds[0];
-                                    _freeCursorIds.splice(1);
+                                    cursorId = this._freeCursorIds[0];
+                                    this._freeCursorIds.splice(1);
                                 }
                                 let tuioCursor = new Tuio11Cursor(this._currentTime, s, cursorId, x, y, X, Y, m);
                                 this._tuioCursors.set(s, tuioCursor);
@@ -245,11 +245,11 @@ export class Tuio11Client {
                                     }
                                 }
                             } else {
-                                let blobId = _tuioBlobs.size;
-                                if (_freeBlobIds.size > 0)
+                                let blobId =this. _tuioBlobs.size;
+                                if (this._freeBlobIds.size > 0)
                                 {
-                                    blobId = _freeBlobIds[0];
-                                    _freeBlobIds.splice(1);
+                                    blobId = this._freeBlobIds[0];
+                                    this._freeBlobIds.splice(1);
                                 }
                                 let tuioBlob = new Tuio11Blob(this._currentTime, s, blobId, x, y, a, w, h, f, X, Y, A, m, r);
                                 this._tuioBlobs.set(s, tuioBlob);
