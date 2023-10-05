@@ -171,7 +171,7 @@ export class Tuio11Client {
                             tuioListener.removeTuioCursor(tuioCursor);
                         }
                         this._tuioCursors.delete(sessionId);
-                        this._freeCursorIds.add(tuioCursor.cursorId);
+                        this._freeCursorIds.push(tuioCursor.cursorId);
                     }
                     this._freeCursorIds.sort();
                     for(let setMessage of this._cursorSetMessages) {
@@ -187,10 +187,10 @@ export class Tuio11Client {
                                 }
                             } else {
                                 let cursorId = this._tuioCursors.size;
-                                if (this._freeCursorIds.size > 0)
+                                if (this._freeCursorIds.length > 0)
                                 {
                                     cursorId = this._freeCursorIds[0];
-                                    this._freeCursorIds.splice(1);
+                                    this._freeCursorIds.splice(0, 1);
                                 }
                                 let tuioCursor = new Tuio11Cursor(this._currentTime, s, cursorId, x, y, X, Y, m);
                                 this._tuioCursors.set(s, tuioCursor);
@@ -230,7 +230,7 @@ export class Tuio11Client {
                             tuioListener.removeTuioBlob(tuioBlob);
                         }
                         this._tuioBlobs.delete(sessionId);
-                        this._freeBlobIds.add(tuioBlob.blobId);
+                        this._freeBlobIds.push(tuioBlob.blobId);
                     }
                     this._freeBlobIds.sort();
                     for(let setMessage of this._blobSetMessages) {
@@ -246,10 +246,10 @@ export class Tuio11Client {
                                 }
                             } else {
                                 let blobId =this. _tuioBlobs.size;
-                                if (this._freeBlobIds.size > 0)
+                                if (this._freeBlobIds.length > 0)
                                 {
                                     blobId = this._freeBlobIds[0];
-                                    this._freeBlobIds.splice(1);
+                                    this._freeBlobIds.splice(0, 1);
                                 }
                                 let tuioBlob = new Tuio11Blob(this._currentTime, s, blobId, x, y, a, w, h, f, X, Y, A, m, r);
                                 this._tuioBlobs.set(s, tuioBlob);
@@ -258,10 +258,6 @@ export class Tuio11Client {
                                 }
                             }
                         }
-                    }
-                    while(this._freeBlobIds.has(this._maxBlobId)){
-                        this._freeBlobIds.delete(this._maxBlobId);
-                        this._maxBlobId -= 1;
                     }
                     for(let tuioListener of this._tuioListeners) {
                         tuioListener.refresh(this._currentTime);
