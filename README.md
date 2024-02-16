@@ -8,4 +8,4 @@ It is build upon the osc library [osc.js](https://github.com/colinbdclark/osc.js
 See the examples in the `examples` folder.
 
 # Development
-The [TUIO 1.1 Simulator fork](https://github.com/jkruke/TUIO11_Simulator) by Jonas Krukenberg adds WebSocket support to Martin Kaltenbrunners java TUIO 1.1 Simulator. This allows to test your implementation without an actual TUIO tracker.
+Our [TUIO 1.1 Simulator fork](https://github.com/paul-peters/TUIO11_Simulator) contains an [executable jar](https://github.com/paul-peters/TUIO11_Simulator/tree/master/release/TUIO_Simulator_WS) to simulate a tuio websocket on `localhost`.
