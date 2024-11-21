@@ -28,7 +28,6 @@ export class WebsocketTuioReceiver extends TuioReceiver {
             this.onOscMessage(oscMessage);
         }.bind(this));
         this._oscPort.on("close", function(error) {
-            console.log("closed:", this, "message:", error)
             this.connect()
         }.bind(this));
     }
