@@ -1,6 +1,5 @@
 export class TuioReceiver {
     constructor() {
-        this._isConnected = false;
         this._messageListeners = {};
     }
 
