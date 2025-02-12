@@ -13,11 +13,11 @@ export class Tuio11Cursor extends Tuio11Container {
         return this._cursorId;
     }
 
-    private hasChanged(currentTime: TuioTime, position: Vector, velocity: Vector, motionAccel: number) {
+    public hasChanged(currentTime: TuioTime, position: Vector, velocity: Vector, motionAccel: number) {
         return !(position === this.position && velocity === this.velocity && motionAccel === this.motionAccel);
     }
 
-    private update(currentTime: TuioTime, position: Vector, velocity: Vector, motionAccel: number) {
+    public update(currentTime: TuioTime, position: Vector, velocity: Vector, motionAccel: number) {
         let isCalculateSpeeds = (position.x !== this.position.x && velocity.x === 0) || (position.y !== this.position.y && velocity.y === 0);
         this.updateContainer(currentTime, position, velocity, motionAccel, isCalculateSpeeds);
     }
