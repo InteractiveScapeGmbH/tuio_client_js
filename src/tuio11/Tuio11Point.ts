@@ -16,4 +16,8 @@ export class Tuio11Point {
     public get position(): Vector {
         return this._position;
     }
+
+    protected set position(position: Vector) {
+        this._position = position;
+    }
 }
