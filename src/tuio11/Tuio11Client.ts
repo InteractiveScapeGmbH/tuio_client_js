@@ -27,9 +27,9 @@ export class Tuio11Client {
 
     constructor(tuioReceiver: TuioReceiver) {
         this._tuioReceiver = tuioReceiver;
-        this._tuioReceiver.addMessageListener("/tuio/2Dobj", this._on2Dobj.bind(this));
-        this._tuioReceiver.addMessageListener("/tuio/2Dcur", this._on2Dcur.bind(this));
-        this._tuioReceiver.addMessageListener("/tuio/2Dblb", this._on2Dblb.bind(this));
+        this._tuioReceiver.addMessageListener("/tuio/2Dobj", this.on2Dobj);
+        this._tuioReceiver.addMessageListener("/tuio/2Dcur", this.on2Dcur);
+        this._tuioReceiver.addMessageListener("/tuio/2Dblb", this.on2Dblb);
         this._tuioListeners = [];
 
         this._tuioObjects = new Map();
@@ -121,7 +121,7 @@ export class Tuio11Client {
         return true;
     }
 
-    _on2Dobj(oscMessage: OSC.Message) {
+    on2Dobj(oscMessage: OSC.Message) {
         let command = oscMessage.args[0];
         if (command === "set") {
             this._objectSetMessages.push(oscMessage);
@@ -132,7 +132,7 @@ export class Tuio11Client {
             if (this.updateFrame(fseq)) {
                 if (this._objectAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioObjects.keys());
-                    let aliveSessionIds = new Set(this._objectAliveMessage.args.slice(1).map(arg => arg));
+                    let aliveSessionIds = new Set(this._objectAliveMessage.args.slice(1).map(arg => Number(arg)));
                     let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
                     for (let sessionId of removedSessionIds) {
                         let tuioObject = this._tuioObjects.get(sessionId);
@@ -181,36 +181,41 @@ export class Tuio11Client {
         }
     }
 
-    _on2Dcur(oscMessage) {
-        let command = oscMessage.args[0].value;
+    on2Dcur(oscMessage: OSC.Message) {
+        let command = oscMessage.args[0];
         if (command === "set") {
             this._cursorSetMessages.push(oscMessage);
         } else if (command === "alive") {
             this._cursorAliveMessage = oscMessage;
         } else if (command === "fseq") {
-            let fseq = oscMessage.args[1].value;
-            if (this._updateFrame(fseq)) {
+            let fseq = Number(oscMessage.args[1]);
+            if (this.updateFrame(fseq)) {
                 if (this._cursorAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioCursors.keys());
-                    let aliveSessionIds = new Set(this._cursorAliveMessage.args.slice(1).map(arg => arg.value));
+                    let aliveSessionIds = new Set(this._cursorAliveMessage.args.slice(1).map(arg => Number(arg)));
                     let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
                     for (let sessionId of removedSessionIds) {
                         let tuioCursor = this._tuioCursors.get(sessionId);
-                        tuioCursor._remove(this._currentTime);
-                        for (let tuioListener of this._tuioListeners) {
-                            tuioListener.removeTuioCursor(tuioCursor);
+                        if (tuioCursor) {
+                            tuioCursor.remove(this._currentTime);
+                            for (let tuioListener of this._tuioListeners) {
+                                tuioListener.removeTuioCursor(tuioCursor);
+                            }
+                            this._tuioCursors.delete(sessionId);
+                            this._freeCursorIds.push(tuioCursor.cursorId);
                         }
-                        this._tuioCursors.delete(sessionId);
-                        this._freeCursorIds.push(tuioCursor.cursorId);
                     }
                     this._freeCursorIds.sort();
                     for (let setMessage of this._cursorSetMessages) {
-                        let [, s, x, y, X, Y, m] = setMessage.args.map(arg => arg.value);
-                        if (aliveSessionIds.has(s)) {
-                            if (currentSessionIds.has(s)) {
-                                let tuioCursor = this._tuioCursors.get(s);
-                                if (tuioCursor._hasChanged(this._currentTime, x, y, X, Y, m)) {
-                                    tuioCursor._update(this._currentTime, x, y, X, Y, m);
+                        const sessionId = Number(setMessage.args[1]);
+                        const position = new Vector(Number(setMessage.args[2]), Number(setMessage.args[3]));
+                        const velocity = new Vector(Number(setMessage.args[4]), Number(setMessage.args[5]));
+                        const motionAccel = Number(setMessage.args[6]);
+                        if (aliveSessionIds.has(sessionId)) {
+                            if (currentSessionIds.has(sessionId)) {
+                                let tuioCursor = this._tuioCursors.get(sessionId);
+                                if (tuioCursor?.hasChanged(this._currentTime, position, velocity, motionAccel)) {
+                                    tuioCursor?.update(this._currentTime, position, velocity, motionAccel);
                                     for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioCursor(tuioCursor);
                                     }
@@ -221,8 +226,8 @@ export class Tuio11Client {
                                     cursorId = this._freeCursorIds[0];
                                     this._freeCursorIds.splice(0, 1);
                                 }
-                                let tuioCursor = new Tuio11Cursor(this._currentTime, s, cursorId, x, y, X, Y, m);
-                                this._tuioCursors.set(s, tuioCursor);
+                                let tuioCursor = new Tuio11Cursor(this._currentTime, sessionId, cursorId, position, velocity, motionAccel);
+                                this._tuioCursors.set(sessionId, tuioCursor);
                                 for (let tuioListener of this._tuioListeners) {
                                     tuioListener.addTuioCursor(tuioCursor);
                                 }
@@ -239,15 +244,15 @@ export class Tuio11Client {
         }
     }
 
-    _on2Dblb(oscMessage) {
-        let command = oscMessage.args[0].value;
+    on2Dblb(oscMessage: OSC.Message) {
+        let command = oscMessage.args[0];
         if (command === "set") {
             this._blobSetMessages.push(oscMessage);
         } else if (command === "alive") {
             this._blobAliveMessage = oscMessage;
         } else if (command === "fseq") {
-            let fseq = oscMessage.args[1].value;
-            if (this._updateFrame(fseq)) {
+            let fseq = Number(oscMessage.args[1]);
+            if (this.updateFrame(fseq)) {
                 if (this._blobAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioBlobs.keys());
                     let aliveSessionIds = new Set(this._blobAliveMessage.args.slice(1).map(arg => arg.value));
