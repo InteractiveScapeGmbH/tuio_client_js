@@ -54,7 +54,7 @@ export class Tuio11Container extends Tuio11Point {
         return this._prevPoints
     }
 
-    private updateContainer(currentTime: TuioTime, position: Vector, velocity: Vector, motionAccel: number, isCalculateSpeeds: boolean) {
+    protected updateContainer(currentTime: TuioTime, position: Vector, velocity: Vector, motionAccel: number, isCalculateSpeeds: boolean) {
         let lastPoint = this.path[this.path.length - 1];
         this.position = position;
         if (isCalculateSpeeds) {
