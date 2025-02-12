@@ -1,18 +1,20 @@
 export class TuioTime {
-    static _startTime = new TuioTime(0, 0);
+    static _startTime: TuioTime = new TuioTime(0, 0);
+    private _seconds: number;
+    private _microSeconds: number;
 
-    constructor(seconds, microSeconds) {
+    constructor(seconds: number, microSeconds: number) {
         this._seconds = seconds;
         this._microSeconds = microSeconds;
     }
 
-    static fromOscTime(oscTime){
-        let seconds = oscTime.raw[0];
-        let microseconds = oscTime.raw[1] / 4294967296;
-        return new TuioTime(seconds, microseconds);
-    }
+    // static fromOscTime(oscTime){
+    //     let seconds = oscTime.raw[0];
+    //     let microseconds = oscTime.raw[1] / 4294967296;
+    //     return new TuioTime(seconds, microseconds);
+    // }
 
-    subtract(tuioTime) {
+    public subtract(tuioTime: TuioTime): TuioTime {
         let seconds = this._seconds - tuioTime._seconds;
         let microSeconds = this._microSeconds - tuioTime._microSeconds;
 
@@ -23,20 +25,20 @@ export class TuioTime {
         return new TuioTime(seconds, microSeconds);
     }
 
-    getTotalMilliseconds() {
+    public getTotalMilliseconds(): number {
         return 1000 * this._seconds + this._microSeconds / 1000;
     }
 
-    static init(){
+    public static init() {
         TuioTime._startTime = TuioTime._getSystemTime();
     }
 
-    static _getSystemTime(){
+    private static _getSystemTime(): TuioTime {
         let performanceNow = performance.now();
         return new TuioTime(Math.floor(performanceNow / 1000), Math.floor(performanceNow * 1000) % 1000000);
     }
 
-    static getCurrentTime(){
+    public static getCurrentTime(): TuioTime {
         return TuioTime._getSystemTime().subtract(TuioTime._startTime);
     }
 }
