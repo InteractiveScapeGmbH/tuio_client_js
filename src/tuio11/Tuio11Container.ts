@@ -50,6 +50,10 @@ export class Tuio11Container extends Tuio11Point {
         return this._state;
     }
 
+    protected set state(state: TuioState) {
+        this._state = state;
+    }
+
     public get path(): Tuio11Point[] {
         return this._prevPoints
     }
