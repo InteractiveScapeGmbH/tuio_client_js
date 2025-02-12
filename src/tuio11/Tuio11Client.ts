@@ -1,10 +1,31 @@
-import {Tuio11Object} from "./Tuio11Object.js";
-import {Tuio11Cursor} from "./Tuio11Cursor.js";
-import {Tuio11Blob} from "./Tuio11Blob.js";
-import {TuioTime} from "../common/TuioTime.js";
+import { Tuio11Object } from "./Tuio11Object.js";
+import { Tuio11Cursor } from "./Tuio11Cursor.js";
+import { Tuio11Blob } from "./Tuio11Blob.js";
+import { TuioTime } from "../common/TuioTime.js";
+import { TuioReceiver } from "../common/TuioReceiver.js";
+import OSC from "osc-js";
+import { Vector } from "vecti";
+import { Tuio11Listener } from "./Tuio11Listener.js";
 
 export class Tuio11Client {
-    constructor(tuioReceiver) {
+
+    private _tuioReceiver: TuioReceiver;
+    private _currentTime: TuioTime;
+    private _currentFrame: number;
+    private _tuioObjects: Map<number, Tuio11Object>;
+    private _tuioCursors: Map<number, Tuio11Cursor>;
+    private _tuioBlobs: Map<number, Tuio11Blob>;
+    private _objectSetMessages: OSC.Message[];
+    private _cursorSetMessages: OSC.Message[];
+    private _blobSetMessages: OSC.Message[];
+    private _objectAliveMessage: OSC.Message | null;
+    private _cursorAliveMessage: OSC.Message | null;
+    private _blobAliveMessage: OSC.Message | null;
+    private _freeCursorIds: number[];
+    private _freeBlobIds: number[];
+    private _tuioListeners: Tuio11Listener[];
+
+    constructor(tuioReceiver: TuioReceiver) {
         this._tuioReceiver = tuioReceiver;
         this._tuioReceiver.addMessageListener("/tuio/2Dobj", this._on2Dobj.bind(this));
         this._tuioReceiver.addMessageListener("/tuio/2Dcur", this._on2Dcur.bind(this));
@@ -27,69 +48,69 @@ export class Tuio11Client {
         this._freeBlobIds = [];
 
         this._currentFrame = 0;
-        this._currentTime = null;
+        this._currentTime = TuioTime.getCurrentTime();
     }
 
-    connect() {
+    public connect() {
         TuioTime.init();
         this._currentTime = TuioTime.getCurrentTime();
         this._tuioReceiver.connect();
     }
 
-    disconnect() {
+    public disconnect() {
         this._tuioReceiver.disconnect();
     }
 
-    addTuioListener(tuioListener){
+    public addTuioListener(tuioListener: Tuio11Listener) {
         this._tuioListeners.push(tuioListener);
     }
 
-    removeTuioListener(tuioListener){
+    public removeTuioListener(tuioListener: Tuio11Listener) {
         let index = this._tuioListeners.indexOf(tuioListener);
-        if(index > -1) {
+        if (index > -1) {
             this._tuioListeners.splice(index, 1);
         }
     }
 
-    removeAllTuioListeners(){
+    public removeAllTuioListeners() {
         this._tuioListeners = [];
     }
 
-    getTuioObjects(){
+    public getTuioObjects() {
         return this._tuioObjects.values();
     }
 
-    getTuioCursors(){
+    public getTuioCursors() {
         return this._tuioCursors.values();
     }
 
-    getTuioBlobs(){
+    public getTuioBlobs() {
         return this._tuioBlobs.values();
     }
 
-    getTuioObject(sessionId){
+    public getTuioObject(sessionId: number) {
         let ret = this._tuioObjects.get(sessionId);
         return ret === undefined ? null : ret;
     }
 
-    getTuioCursor(sessionId){
+    public getTuioCursor(sessionId: number) {
         let ret = this._tuioCursors.get(sessionId);
         return ret === undefined ? null : ret;
     }
 
-    getTuioBlob(sessionId){
+    public getTuioBlob(sessionId: number) {
         let ret = this._tuioBlobs.get(sessionId);
         return ret === undefined ? null : ret;
     }
 
-    _updateFrame(fseq){
+    private updateFrame(fseq: number) {
         let currentTime = TuioTime.getCurrentTime();
 
-        if(fseq > 0){
-            if(fseq > this._currentFrame){
+        if (fseq > 0) {
+            if (fseq > this._currentFrame) {
                 this._currentTime = currentTime;
             }
-            if(fseq >= this._currentFrame || (this._currentFrame - fseq) > 100){
+            if (fseq >= this._currentFrame || (this._currentFrame - fseq) > 100) {
                 this._currentFrame = fseq;
             } else {
                 return false;
@@ -100,48 +121,57 @@ export class Tuio11Client {
         return true;
     }
 
-    _on2Dobj(oscMessage){
-        let command = oscMessage.args[0].value;
-        if(command === "set") {
+    _on2Dobj(oscMessage: OSC.Message) {
+        let command = oscMessage.args[0];
+        if (command === "set") {
             this._objectSetMessages.push(oscMessage);
         } else if (command === "alive") {
             this._objectAliveMessage = oscMessage;
         } else if (command === "fseq") {
-            let fseq = oscMessage.args[1].value;
-            if(this._updateFrame(fseq)){
-                if(this._objectAliveMessage !== null){
+            let fseq = Number(oscMessage.args[1]);
+            if (this.updateFrame(fseq)) {
+                if (this._objectAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioObjects.keys());
-                    let aliveSessionIds = new Set(this._objectAliveMessage.args.slice(1).map(arg => arg.value));
+                    let aliveSessionIds = new Set(this._objectAliveMessage.args.slice(1).map(arg => arg));
                     let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
-                    for(let sessionId of removedSessionIds) {
+                    for (let sessionId of removedSessionIds) {
                         let tuioObject = this._tuioObjects.get(sessionId);
-                        tuioObject._remove(this._currentTime);
-                        for(let tuioListener of this._tuioListeners) {
-                            tuioListener.removeTuioObject(tuioObject);
+                        if (tuioObject) {
+                            tuioObject.remove(this._currentTime);
+                            for (let tuioListener of this._tuioListeners) {
+                                tuioListener.removeTuioObject(tuioObject);
+                            }
                         }
                         this._tuioObjects.delete(sessionId);
                     }
-                    for(let setMessage of this._objectSetMessages){
-                        let [, s, i, x, y, a, X, Y, A, m, r] = setMessage.args.map(arg => arg.value);
-                        if(aliveSessionIds.has(s)){
-                            if(currentSessionIds.has(s)){
-                                let tuioObject = this._tuioObjects.get(s);
-                                if(tuioObject._hasChanged(this._currentTime, x, y, a, X, Y, A, m, r)){
-                                    tuioObject._update(this._currentTime, x, y, a, X, Y, A, m, r)
-                                    for(let tuioListener of this._tuioListeners) {
+                    for (let setMessage of this._objectSetMessages) {
+                        const sessionId = Number(setMessage.args[1]);
+                        const symbolId = Number(setMessage.args[2]);
+                        const position = new Vector(Number(setMessage.args[3]), Number(setMessage.args[4]));
+                        const angle = Number(setMessage.args[5])
+                        const velocity = new Vector(Number(setMessage.args[6]), Number(setMessage.args[7]));
+                        const rotationSpeed = Number(setMessage.args[8]);
+                        const motionAccel = Number(setMessage.args[9]);
+                        const rotationAccel = Number(setMessage.args[10]);
+                        if (aliveSessionIds.has(sessionId)) {
+                            if (currentSessionIds.has(sessionId)) {
+                                let tuioObject = this._tuioObjects.get(sessionId);
+                                if (tuioObject?.hasChanged(this._currentTime, position, angle, velocity, rotationSpeed, motionAccel, rotationAccel)) {
+                                    tuioObject?.update(this._currentTime, position, angle, velocity, rotationSpeed, motionAccel, rotationAccel)
+                                    for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioObject(tuioObject);
                                     }
                                 }
                             } else {
-                                let tuioObject = new Tuio11Object(this._currentTime, s, i, x, y, a, X, Y, A, m, r);
-                                this._tuioObjects.set(s, tuioObject);
-                                for(let tuioListener of this._tuioListeners) {
+                                let tuioObject = new Tuio11Object(this._currentTime, sessionId, symbolId, position, angle, velocity, rotationSpeed, motionAccel, rotationAccel);
+                                this._tuioObjects.set(sessionId, tuioObject);
+                                for (let tuioListener of this._tuioListeners) {
                                     tuioListener.addTuioObject(tuioObject);
                                 }
                             }
                         }
                     }
-                    for(let tuioListener of this._tuioListeners) {
+                    for (let tuioListener of this._tuioListeners) {
                         tuioListener.refresh(this._currentTime);
                     }
                 }
@@ -151,56 +181,55 @@ export class Tuio11Client {
         }
     }
 
-    _on2Dcur(oscMessage){
+    _on2Dcur(oscMessage) {
         let command = oscMessage.args[0].value;
-        if(command === "set") {
+        if (command === "set") {
             this._cursorSetMessages.push(oscMessage);
         } else if (command === "alive") {
             this._cursorAliveMessage = oscMessage;
         } else if (command === "fseq") {
             let fseq = oscMessage.args[1].value;
-            if(this._updateFrame(fseq)){
-                if(this._cursorAliveMessage !== null){
+            if (this._updateFrame(fseq)) {
+                if (this._cursorAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioCursors.keys());
                     let aliveSessionIds = new Set(this._cursorAliveMessage.args.slice(1).map(arg => arg.value));
                     let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
-                    for(let sessionId of removedSessionIds) {
+                    for (let sessionId of removedSessionIds) {
                         let tuioCursor = this._tuioCursors.get(sessionId);
                         tuioCursor._remove(this._currentTime);
-                        for(let tuioListener of this._tuioListeners) {
+                        for (let tuioListener of this._tuioListeners) {
                             tuioListener.removeTuioCursor(tuioCursor);
                         }
                         this._tuioCursors.delete(sessionId);
                         this._freeCursorIds.push(tuioCursor.cursorId);
                     }
                     this._freeCursorIds.sort();
-                    for(let setMessage of this._cursorSetMessages) {
+                    for (let setMessage of this._cursorSetMessages) {
                         let [, s, x, y, X, Y, m] = setMessage.args.map(arg => arg.value);
-                        if(aliveSessionIds.has(s)){
-                            if(currentSessionIds.has(s)){
+                        if (aliveSessionIds.has(s)) {
+                            if (currentSessionIds.has(s)) {
                                 let tuioCursor = this._tuioCursors.get(s);
-                                if(tuioCursor._hasChanged(this._currentTime, x, y, X, Y, m)){
+                                if (tuioCursor._hasChanged(this._currentTime, x, y, X, Y, m)) {
                                     tuioCursor._update(this._currentTime, x, y, X, Y, m);
-                                    for(let tuioListener of this._tuioListeners) {
+                                    for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioCursor(tuioCursor);
                                     }
                                 }
                             } else {
                                 let cursorId = this._tuioCursors.size;
-                                if (this._freeCursorIds.length > 0)
-                                {
+                                if (this._freeCursorIds.length > 0) {
                                     cursorId = this._freeCursorIds[0];
                                     this._freeCursorIds.splice(0, 1);
                                 }
                                 let tuioCursor = new Tuio11Cursor(this._currentTime, s, cursorId, x, y, X, Y, m);
                                 this._tuioCursors.set(s, tuioCursor);
-                                for(let tuioListener of this._tuioListeners) {
+                                for (let tuioListener of this._tuioListeners) {
                                     tuioListener.addTuioCursor(tuioCursor);
                                 }
                             }
                         }
                     }
-                    for(let tuioListener of this._tuioListeners) {
+                    for (let tuioListener of this._tuioListeners) {
                         tuioListener.refresh(this._currentTime);
                     }
                 }
@@ -210,56 +239,55 @@ export class Tuio11Client {
         }
     }
 
-    _on2Dblb(oscMessage){
+    _on2Dblb(oscMessage) {
         let command = oscMessage.args[0].value;
-        if(command === "set") {
+        if (command === "set") {
             this._blobSetMessages.push(oscMessage);
         } else if (command === "alive") {
             this._blobAliveMessage = oscMessage;
         } else if (command === "fseq") {
             let fseq = oscMessage.args[1].value;
-            if(this._updateFrame(fseq)){
-                if(this._blobAliveMessage !== null){
+            if (this._updateFrame(fseq)) {
+                if (this._blobAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioBlobs.keys());
                     let aliveSessionIds = new Set(this._blobAliveMessage.args.slice(1).map(arg => arg.value));
                     let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
-                    for(let sessionId of removedSessionIds) {
+                    for (let sessionId of removedSessionIds) {
                         let tuioBlob = this._tuioBlobs.get(sessionId);
                         tuioBlob._remove(this._currentTime);
-                        for(let tuioListener of this._tuioListeners) {
+                        for (let tuioListener of this._tuioListeners) {
                             tuioListener.removeTuioBlob(tuioBlob);
                         }
                         this._tuioBlobs.delete(sessionId);
                         this._freeBlobIds.push(tuioBlob.blobId);
                     }
                     this._freeBlobIds.sort();
-                    for(let setMessage of this._blobSetMessages) {
+                    for (let setMessage of this._blobSetMessages) {
                         let [, s, x, y, a, w, h, f, X, Y, A, m, r] = setMessage.args.map(arg => arg.value);
-                        if(aliveSessionIds.has(s)){
-                            if(currentSessionIds.has(s)){
+                        if (aliveSessionIds.has(s)) {
+                            if (currentSessionIds.has(s)) {
                                 let tuioBlob = this._tuioBlobs.get(s);
-                                if(tuioBlob._hasChanged(this._currentTime, x, y, a, w, h, f, X, Y, A, m, r)){
+                                if (tuioBlob._hasChanged(this._currentTime, x, y, a, w, h, f, X, Y, A, m, r)) {
                                     tuioBlob._update(this._currentTime, x, y, a, w, h, f, X, Y, A, m, r);
-                                    for(let tuioListener of this._tuioListeners) {
+                                    for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioBlob(tuioBlob);
                                     }
                                 }
                             } else {
-                                let blobId =this. _tuioBlobs.size;
-                                if (this._freeBlobIds.length > 0)
-                                {
+                                let blobId = this._tuioBlobs.size;
+                                if (this._freeBlobIds.length > 0) {
                                     blobId = this._freeBlobIds[0];
                                     this._freeBlobIds.splice(0, 1);
                                 }
                                 let tuioBlob = new Tuio11Blob(this._currentTime, s, blobId, x, y, a, w, h, f, X, Y, A, m, r);
                                 this._tuioBlobs.set(s, tuioBlob);
-                                for(let tuioListener of this._tuioListeners) {
+                                for (let tuioListener of this._tuioListeners) {
                                     tuioListener.addTuioBlob(tuioBlob);
                                 }
                             }
                         }
                     }
-                    for(let tuioListener of this._tuioListeners) {
+                    for (let tuioListener of this._tuioListeners) {
                         tuioListener.refresh(this._currentTime);
                     }
                 }
