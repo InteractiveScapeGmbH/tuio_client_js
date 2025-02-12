@@ -1,25 +1,47 @@
 import OSC from "osc-js"
-
-interface MessageListener {
-    profile: string,
-    callback: OscCallback
-}
-
-
-type OscCallback = (data: OSC.Message) => void;
+import { OscCallback, MessageListener } from "./MessageListener";
 
 export class WebsocketReceiver {
-    private ws: WebSocket;
-    private messageListeners: Map<string, OscCallback[]>;
+    private ws: WebSocket | null = null;
+    private host: string;
+    private port: number;
+    private messageListeners: Map<string, OscCallback[]> = new Map();
+
     constructor(host: string, port: number) {
-        this.messageListeners = new Map();
-        this.ws = new WebSocket("ws://127.0.0.1:3333");
-        this.ws.onmessage = async (event) => {
-            let msg = new OSC.Bundle();
-            const arr = new DataView(await event.data.arrayBuffer());
-            msg.unpack(arr);
-            // console.log(msg.bundleElements[2].address);
-        }
+
+        this.host = host;
+        this.port = port;
+    }
+
+    public connect() {
+        const url = `ws://${this.host}:${this.port}`
+        this.ws = new WebSocket(url);
+        this.ws.onmessage = (event: MessageEvent) => this.processMessages(event);
+    }
+
+    public disconnect() {
+        this.ws?.close();
+    }
+
+
+    private async processMessages(event: MessageEvent): Promise<void> {
+        const bundle = new OSC.Bundle();
+        const dataview = new DataView(await event.data.arrayBuffer());
+        bundle.unpack(dataview);
+        bundle.bundleElements.forEach((oscmessage) => {
+            if (this.messageListeners.has(oscmessage.address)) {
+                const callbacks = this.messageListeners.get(oscmessage.address);
+                callbacks?.forEach((callback) => {
+                    callback(oscmessage);
+                });
+            }
+        });
+    }
+
+    public addMessageListeners(listeners: MessageListener[]) {
+        listeners.forEach((listener) => {
+            this.addMessageListener(listener);
+        });
     }
 
 
@@ -31,5 +53,9 @@ export class WebsocketReceiver {
         this.messageListeners.get(profile)?.push(listener.callback);
     }
 
-
+    public removeMessageListener(messageProfile: string) {
+        if (this.messageListeners.has(messageProfile)) {
+            this.messageListeners.delete(messageProfile);
+        }
+    }
 }

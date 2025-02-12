@@ -3,7 +3,8 @@
 // import viteLogo from '/vite.svg'
 // import { setupCounter } from './counter.ts'
 
-import { TuioClient } from "./common/TuioClient";
+import { TuioSession } from "./common/TuioSession";
+import { TuioVersion } from "./common/TuioVersion";
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 //   <div>
@@ -24,5 +25,4 @@ import { TuioClient } from "./common/TuioClient";
 // `
 
 // setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
-const client = new TuioClient("127.0.0.1", 3333);
-// client.connect();
+const session = new TuioSession(TuioVersion.Tuio11, "127.0.0.1", 3333);
