@@ -2,30 +2,25 @@ import OSC from "osc-js";
 import { TuioReceiver } from "./TuioReceiver.js";
 
 export class WebsocketTuioReceiver extends TuioReceiver {
-    private _url: string;
-    private _websocket: WebSocket | null = null;
-    constructor(url: string) {
+    private _host: string;
+    private _port: number;
+    private _osc: OSC;
+    constructor(host: string, port: number) {
         super();
-        this._url = url;
+        this._host = host;
+        this._port = port;
+        const plugin = new OSC.WebsocketClientPlugin({host: this._host, port: this._port});
+        this._osc = new OSC({plugin: plugin});
+        this._osc.on("*", (message: OSC.Message) => this.onOscMessage(message));
     }
 
     public connect() {
-        this._websocket = new WebSocket(this._url);
-        this._websocket.onmessage = (event: MessageEvent) => this.processMessages(event);
+        this._osc.open();
         this.isConnected = true;
     }
 
-    private async processMessages(event: MessageEvent) {
-        const bundle = new OSC.Bundle();
-        const dataview = new DataView(await event.data.arrayBuffer());
-        bundle.unpack(dataview);
-        bundle.bundleElements.forEach((oscmessage) => {
-            this.onOscMessage(oscmessage);
-        });
-    }
-
     public disconnect() {
-        this._websocket?.close();
+        this._osc.close();
         this.isConnected = false;
     }
 }
