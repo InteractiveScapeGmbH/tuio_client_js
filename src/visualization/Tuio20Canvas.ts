@@ -1,6 +1,10 @@
 import { TuioTime } from "../common/TuioTime.ts";
 import { WebsocketTuioReceiver } from "../common/WebsocketTuioReceiver.js";
+import { Tuio20Bounds } from "../tuio20/Tuio20Bounds.ts";
 import { Tuio20Client } from "../tuio20/Tuio20Client.ts"
+import { Tuio20Object } from "../tuio20/Tuio20Object.ts";
+import { Tuio20Pointer } from "../tuio20/Tuio20Pointer.ts";
+import { Tuio20Token } from "../tuio20/Tuio20Token.ts";
 import { Visuals } from "./Visuals.js";
 
 
@@ -130,7 +134,7 @@ export class Tuio20Canvas {
 		);
 	};
 
-	private addTuioBounds (tuioBounds: Tuio20Bounds) {
+	private addTuioBounds(tuioBounds: Tuio20Bounds) {
 		this._blobs.set(
 			tuioBounds.sessionId,
 			{
@@ -224,7 +228,7 @@ export class Tuio20Canvas {
 	// Visualization and utilities
 
 	private setCanvasSize(width: number, height: number) {
-		if(!!this._canvas) {
+		if (!!this._canvas) {
 			this._canvas.width = width;
 			this._canvas.height = height;
 			this._canvas.style = "{width: width+'px',height: height+'px'}";
@@ -295,7 +299,7 @@ export class Tuio20Canvas {
 	}
 
 	private drawToken(token: any) {
-		if(!this._context) return;
+		if (!this._context) return;
 
 		var x = token.tuioToken.xPos * this._size[0] / this._drawingScale;
 		var y = token.tuioToken.yPos * this._size[1] / this._drawingScale;
@@ -312,36 +316,36 @@ export class Tuio20Canvas {
 		this._context.closePath();
 		var rectWidth = 441;
 		var rectHeight = 441;
-		
+
 		x -= rectWidth / 2;
 		y -= rectHeight / 2;
-		
+
 		var rotation = token.tuioToken.angle;
 		var color = token.visual.getColor();
 		this._context.translate(x + rectWidth / 2, y + rectHeight / 2);
 		this._context.rotate(rotation);
-		
+
 		this._context.font = "bold 24px Arial";
 		this._context.fillStyle = color;
 		this._context.textAlign = "right";
-		
+
 		//rotation
 		var text = (Math.round(this.radToDeg(rotation)) % 360) + "°";
 		this._context.fillText(text, -rectWidth / 2 - 20, 0);
-		
+
 		//markerId
 		text = "ID: " + (token.tuioToken.cId == "0" ? "-" : token.tuioToken.cId);
 		this._context.textAlign = "left";
 		this._context.fillText(text, rectWidth / 2 + 20, 0);
-		
-		
+
+
 		this._context.rotate(-rotation);
 		this._context.translate(-(x + rectWidth / 2), -(y + rectHeight / 2));
 	}
 
 	private prepareCanvas() {
-		if(!this._context) return;
-		
+		if (!this._context) return;
+
 		this._context.setTransform(1, 0, 0, 1, 0, 0);
 		this._context.clearRect(-this._canvasWidth, -this._canvasHeight, this._canvasWidth * 3, this._canvasHeight * 3);
 		this._context.fillStyle = "#1d1d1d";
