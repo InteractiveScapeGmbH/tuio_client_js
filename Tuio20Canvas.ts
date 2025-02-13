@@ -7,6 +7,10 @@ import {Tuio20Client} from "./src/tuio20/Tuio20Client";
 import {Tuio20Object} from "./src/tuio20/Tuio20Object";
 import {TuioTime} from "./src/common/TuioTime";
 import {Tuio20Listener} from "./src/tuio20/Tuio20Listener";
+import {renderSVG} from 'uqr';
+import {Vector} from "vecti";
+import {ScapeXMobile, SxmConfig} from "./src/tuio20/ScapeXMobile";
+import {Tuio20Symbol} from "./src/tuio20/Tuio20Symbol";
 
 
 interface PointerVisual{
@@ -23,6 +27,7 @@ interface TokenVisual{
 
 interface BlobVisual{
 	tuioBounds: Tuio20Bounds,
+	tuioSymbol: Tuio20Symbol,
 	visual: Visuals
 }
 
@@ -45,6 +50,9 @@ export class Tuio20Canvas implements Tuio20Listener{
 	_blobs: Map<number, BlobVisual>;
 	_tuioReceiver: WebsocketTuioReceiver;
 	_tuio20Client: Tuio20Client;
+	_baseWebsite: string = "https://interactivescapegmbh.github.io/sxmtest.html";
+	_website: string = ""
+	_scapeXMobile: ScapeXMobile;
 
 
 	constructor(hostname: string) {
@@ -80,6 +88,8 @@ export class Tuio20Canvas implements Tuio20Listener{
 
 		this._context = this._canvas.getContext("2d", { alpha: true });
 
+		// console.log(svg);
+
 		this._touches = new Map();
 		this._tokens = new Map();
 		this._blobs = new Map();
@@ -88,7 +98,17 @@ export class Tuio20Canvas implements Tuio20Listener{
 		this._tuio20Client = new Tuio20Client(this._tuioReceiver);
 		this._tuio20Client.addTuioListener(this);
 
+		this._scapeXMobile = new ScapeXMobile("10.0.0.20");
+		this._scapeXMobile.onConfigChange = (config) => this.updateQrCodeUrl(config);
 
+	}
+
+	private updateQrCodeUrl(config: SxmConfig){
+		console.log(config)
+		if(config.mqttUrl !== "" && config.roomId !== ""){
+			this._website = `${this._baseWebsite}?r=${config.roomId}&u=${config.mqttUrl}`;
+			console.log(this._website);
+		}
 	}
 
 	private getColor() {
@@ -97,6 +117,21 @@ export class Tuio20Canvas implements Tuio20Listener{
 		this._colorPointer = (this._colorPointer + 1) % use.length;
 		return color;
 	};
+
+	private drawQrCode(data: string, position: Vector, size: Vector, radius: number){
+		if(!this._context) return;
+		const svg = renderSVG(data);
+		const img = new Image();
+		img.src = `data:image/svg+xml,${svg}`;
+		this._context.save();
+		this._context?.roundRect(position.x, position.y, size.x, size.y, radius);
+		this._context.fillStyle = "white";
+		this._context.fill();
+		this._context?.clip();
+		const margin = 0.25 * radius;
+		this._context?.drawImage(img, position.x + margin, position.y + margin, size.x - (margin * 2), size.y - (margin * 2));
+		this._context.restore();
+	}
 
 	private draw() {
 		if (this._shouldDraw) {
@@ -134,12 +169,14 @@ export class Tuio20Canvas implements Tuio20Listener{
 
 	private openSocket() {
 		this._tuio20Client.connect();
+		this._scapeXMobile.connect();
 		this.startDrawing();
 	};
 
 	private closeSocket() {
 		this.stopDrawing();
 		this._tuio20Client.disconnect();
+		this._scapeXMobile.disconnect();
 	};
 
 	private addTuioPointer(tuioPointer: Tuio20Pointer | null) {
@@ -153,12 +190,13 @@ export class Tuio20Canvas implements Tuio20Listener{
 		);
 	};
 
-	private addTuioBounds(tuioBounds: Tuio20Bounds | null) {
+	private addTuioBounds(tuioBounds: Tuio20Bounds | null, tuioSymbol: Tuio20Symbol | null) {
 		if(!tuioBounds) return;
 		this._blobs.set(
 			tuioBounds.sessionId,
 			{
 				tuioBounds: tuioBounds,
+				tuioSymbol: tuioSymbol,
 				visual: new Visuals(this.getColor()),
 			}
 		);
@@ -196,11 +234,15 @@ export class Tuio20Canvas implements Tuio20Listener{
 		}
 		if (tuioObject.containsNewTuioBounds()) {
 			console.log("Add bounds", true);
-			this.addTuioBounds(tuioObject.bounds);
+			this.addTuioBounds(tuioObject.bounds, tuioObject.symbol);
 		}
 	}
 
 	public tuioUpdate(tuioObject: Tuio20Object) {
+		// if(tuioObject.containsTuioBounds()){
+		// 	console.log(`bound_id: ${tuioObject.bounds.sessionId}`);
+		// 	console.log(`symbol_id: ${tuioObject.symbol.sessionId}`);
+		// }
 	}
 
 	public tuioRemove(tuioObject: Tuio20Object) {
@@ -306,6 +348,14 @@ export class Tuio20Canvas implements Tuio20Listener{
 		this._context.strokeStyle = "rgba(" + c.rgbColor?.r + "," + c.rgbColor?.g + "," + c.rgbColor?.b + "," + c.alpha + ")";
 		this._context.lineWidth = c.thickness;
 		this.strokeRect(x, y, w, h, blob.tuioBounds.angle, r);
+		this._context.font = "bold 24px Arial";
+		this._context.fillStyle = blob.visual.getColor();
+		this._context.textAlign = "right";
+		const text = "ID: " + (blob.tuioSymbol.data);
+		this._context.textAlign = "left";
+		this._context.fillText(text, x,y);
+		this._context.rotate(-blob.tuioBounds.angle);
+		this._context.translate(-(x + w / 2), -(y + h / 2));
 	}
 
 	private drawTouch(touch: PointerVisual) {
@@ -331,7 +381,6 @@ export class Tuio20Canvas implements Tuio20Listener{
 		var y = token.tuioToken.position.y * this._size[1] / this._drawingScale;
 
 		token.visual.step();
-
 		let i = 0;
 		var c = token.visual.getCircle(i);
 		this._context.strokeStyle = "rgba(" + c.rgbColor?.r + "," + c.rgbColor?.g + "," + c.rgbColor?.b + "," + c.alpha + ")";
@@ -394,5 +443,7 @@ export class Tuio20Canvas implements Tuio20Listener{
 
 		this._context.fillStyle = "#000000";
 		this._context.fillRect(0, 0, this._size[0] / this._drawingScale, this._size[1] / this._drawingScale);
+		this.drawQrCode(this._website, new Vector(0,0), new Vector(300, 300), 40);
+
 	}
 };
