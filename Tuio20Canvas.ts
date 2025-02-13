@@ -103,15 +103,15 @@ export class Tuio20Canvas implements Tuio20Listener{
 			this._drawing = true;
 			this.prepareCanvas();
 
-			this._blobs.forEach((blob, key)=>{
+			this._blobs.forEach((blob)=>{
 				this.drawBlob(blob);
 			})
 
-			this._touches.forEach((token, key) =>{
+			this._touches.forEach((token) =>{
 				this.drawTouch(token);
 			})
 
-			this._tokens.forEach((token, key) =>{
+			this._tokens.forEach((token) =>{
 				this.drawToken(token);
 			});
 
