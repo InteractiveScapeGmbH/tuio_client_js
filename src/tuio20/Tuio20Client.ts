@@ -253,7 +253,7 @@ export class Tuio20Client {
                     tuId = Number(tuId);
                     cId = Number(cId);
                     group = String(group);
-                    data = String(group);
+                    data = String(data);
                     if (aliveSessionIds.has(sId)) {
                         let tuioObject = this._tuioObjects.get(sId);
                         if (tuioObject?.symbol === null) {
