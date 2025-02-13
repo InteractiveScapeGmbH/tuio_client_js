@@ -2,8 +2,8 @@ import OSC from "osc-js";
 import { TuioReceiver } from "./TuioReceiver.js";
 
 export class WebsocketTuioReceiver extends TuioReceiver {
-    private _host: string;
-    private _port: number;
+    private readonly _host: string;
+    private readonly _port: number;
     private _osc: OSC;
     constructor(host: string, port: number) {
         super();
