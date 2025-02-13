@@ -118,19 +118,12 @@ export class Tuio20Canvas implements Tuio20Listener{
 		return color;
 	};
 
-	private drawQrCode(data: string, position: Vector, size: Vector, radius: number){
+	private drawQrCode(data: string, position: Vector, size: Vector){
 		if(!this._context) return;
 		const svg = renderSVG(data);
 		const img = new Image();
 		img.src = `data:image/svg+xml,${svg}`;
-		this._context.save();
-		this._context?.roundRect(position.x, position.y, size.x, size.y, radius);
-		this._context.fillStyle = "white";
-		this._context.fill();
-		this._context?.clip();
-		const margin = 0.25 * radius;
-		this._context?.drawImage(img, position.x + margin, position.y + margin, size.x - (margin * 2), size.y - (margin * 2));
-		this._context.restore();
+		this._context?.drawImage(img, position.x, position.y, size.x, size.y);
 	}
 
 	private draw() {
@@ -138,9 +131,6 @@ export class Tuio20Canvas implements Tuio20Listener{
 			this._drawing = true;
 			this.prepareCanvas();
 
-			this._blobs.forEach((blob)=>{
-				this.drawBlob(blob);
-			})
 
 			this._touches.forEach((token) =>{
 				this.drawTouch(token);
@@ -149,6 +139,9 @@ export class Tuio20Canvas implements Tuio20Listener{
 			this._tokens.forEach((token) =>{
 				this.drawToken(token);
 			});
+			this._blobs.forEach((blob)=>{
+				this.drawBlob(blob);
+			})
 
 			window.requestAnimationFrame(this.draw.bind(this));
 		}
@@ -443,7 +436,7 @@ export class Tuio20Canvas implements Tuio20Listener{
 
 		this._context.fillStyle = "#000000";
 		this._context.fillRect(0, 0, this._size[0] / this._drawingScale, this._size[1] / this._drawingScale);
-		this.drawQrCode(this._website, new Vector(0,0), new Vector(300, 300), 40);
+		this.drawQrCode(this._website, new Vector(0,0), new Vector(300, 300));
 
 	}
 };
