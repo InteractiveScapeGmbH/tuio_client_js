@@ -341,12 +341,19 @@ export class Tuio20Canvas implements Tuio20Listener{
 		this._context.strokeStyle = "rgba(" + c.rgbColor?.r + "," + c.rgbColor?.g + "," + c.rgbColor?.b + "," + c.alpha + ")";
 		this._context.lineWidth = c.thickness;
 		this.strokeRect(x, y, w, h, blob.tuioBounds.angle, r);
+
+		x -= w/2;
+		y -= h/2;
+		this._context.translate(x + w / 2, y + h / 2);
+		this._context.rotate(blob.tuioBounds.angle);
+
 		this._context.font = "bold 24px Arial";
 		this._context.fillStyle = blob.visual.getColor();
-		this._context.textAlign = "right";
-		const text = "ID: " + (blob.tuioSymbol.data);
 		this._context.textAlign = "left";
-		this._context.fillText(text, x,y);
+		const text = "ID: " + (blob.tuioSymbol.data);
+
+		this._context.fillText(text, w/2 + 20,0);
+
 		this._context.rotate(-blob.tuioBounds.angle);
 		this._context.translate(-(x + w / 2), -(y + h / 2));
 	}
