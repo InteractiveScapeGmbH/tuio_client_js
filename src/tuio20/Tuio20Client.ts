@@ -72,7 +72,7 @@ export class Tuio20Client {
 
     getTuioPointerList() {
         let ret = [];
-        for (let [sessionId, tuioObject] of this._tuioObjects) {
+        for (let [_, tuioObject] of this._tuioObjects) {
             if (tuioObject.containsTuioPointer()) {
                 ret.push(tuioObject._pointer);
             }
@@ -82,7 +82,7 @@ export class Tuio20Client {
 
     getTuioTokenList() {
         let ret = [];
-        for (let [sessionId, tuioObject] of this._tuioObjects) {
+        for (let [_, tuioObject] of this._tuioObjects) {
             if (tuioObject.containsTuioToken()) {
                 ret.push(tuioObject._token);
             }
@@ -92,7 +92,7 @@ export class Tuio20Client {
 
     getTuioBoundsList() {
         let ret = [];
-        for (let [sessionId, tuioObject] of this._tuioObjects) {
+        for (let [_, tuioObject] of this._tuioObjects) {
             if (tuioObject.containsTuioBounds()) {
                 ret.push(tuioObject._bounds);
             }
@@ -102,7 +102,7 @@ export class Tuio20Client {
 
     getTuioSymbolList() {
         let ret = [];
-        for (let [sessionId, tuioObject] of this._tuioObjects) {
+        for (let [_, tuioObject] of this._tuioObjects) {
             if (tuioObject.containsTuioSymbol()) {
                 ret.push(tuioObject._symbol);
             }
