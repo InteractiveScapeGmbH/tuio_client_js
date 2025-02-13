@@ -20,7 +20,7 @@ export class Tuio20Client {
     _nextFrameId: number = 0;
     _prevFrameId: number = 0;
     _prevFrameTime: TuioTime = new TuioTime(0, 0);
-    _dim: Vector | null = null;
+    _dim: number | null = null;
     _source: string | null = null;
 
     constructor(tuioReceiver: TuioReceiver) {
