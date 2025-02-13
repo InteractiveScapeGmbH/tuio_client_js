@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <title>TUIO 2.0 client js example</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src="../src/libs/osc-browser.js"></script>
+    <style>
+        #text {
+            position: fixed; 
+            bottom: 0px; 
+            overflow: auto; 
+            max-height: calc(100vh - 80px); 
+            max-width: calc(100vw - 40px); 
+            margin: 40px 20px
+        }
+
+        #playPauseButton {
+            width: 5em
+        }
+    </style>
+</head>
+<body>
+    <div id="text"></div>
+    <div style="position: fixed; right: 20px">
+        <button id="playPauseButton" >Pause</button>
+        <button id="clearButton">Clear</button>    
+    </div>
+
+    <script type="module">
+        import {Tuio20Client} from "../src/tuio20/Tuio20Client.js";
+        import {Tuio20Listener} from "../src/tuio20/Tuio20Listener.js";
+        import {WebsocketTuioReceiver} from "../src/common/WebsocketTuioReceiver.js";
+
+        const WEBSOCKET_URL = "ws://localhost:3343/"
+
+        let textElement = document.getElementById("text")
+        let playPauseButtonElement = document.getElementById("playPauseButton")
+        let clearButtonElement = document.getElementById("clearButton")
+
+        let paused = false
+        playPauseButtonElement.onclick = function() {
+            if (playPauseButtonElement.textContent == "Pause")  {
+                paused = true
+                playPauseButtonElement.textContent = "Go"
+            } else {
+                paused = false
+                playPauseButtonElement.textContent = "Pause"
+            }
+        }
+        clearButtonElement.onclick = function() {
+            textElement.innerHTML = ""
+        }
+        function writeEvent(eventName, tuioObject) {
+            if (paused) return
+            console.log(eventName, ": ", tuioObject)
+            let jsonString = JSON.stringify(tuioObject, (key, value) => {
+                if (key == "_container") {
+                    return "tuioObject_backref";
+                }
+                if (key == "_prevPoints") {
+                    return "previous_points_omitted";
+                }
+                return value;
+            })
+            textElement.innerHTML = eventName + ": " + jsonString + "</br>" + text.innerHTML
+        }
+        class DebugTuio20Listener extends Tuio20Listener {
+            tuioAdd(tuioObject){
+                writeEvent("tuioAdd", tuioObject)
+            }
+
+            tuioUpdate(tuioObject){
+                writeEvent("tuioUpdate", tuioObject)
+            }
+
+            tuioRemove(tuioObject){
+                writeEvent("tuioRemove", tuioObject)
+            }
+
+            tuioRefresh(time){
+                writeEvent("tuioRefresh", time)
+            }
+        }
+
+        const client = new Tuio20Client(new WebsocketTuioReceiver(WEBSOCKET_URL))
+
+        client.addTuioListener(new DebugTuio20Listener())
+        client.connect()
+    </script>
+</body>
+</html>
