@@ -1,4 +1,5 @@
 export class TuioTime {
+
     static _startTime: TuioTime = new TuioTime(0, 0);
     private _seconds: number;
     private _microSeconds: number;
@@ -8,11 +9,11 @@ export class TuioTime {
         this._microSeconds = microSeconds;
     }
 
-    // static fromOscTime(oscTime){
-    //     let seconds = oscTime.raw[0];
-    //     let microseconds = oscTime.raw[1] / 4294967296;
-    //     return new TuioTime(seconds, microseconds);
-    // }
+    static fromOscTime(oscTime: any): TuioTime {
+        let seconds = oscTime.raw[0];
+        let microseconds = oscTime.raw[1] / 4294967296;
+        return new TuioTime(seconds, microseconds);
+    }
 
     public subtract(tuioTime: TuioTime): TuioTime {
         let seconds = this._seconds - tuioTime._seconds;
