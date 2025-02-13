@@ -27,9 +27,9 @@ export class Tuio11Client {
 
     constructor(tuioReceiver: TuioReceiver) {
         this._tuioReceiver = tuioReceiver;
-        this._tuioReceiver.addMessageListener("/tuio/2Dobj", this.on2Dobj);
-        this._tuioReceiver.addMessageListener("/tuio/2Dcur", this.on2Dcur);
-        this._tuioReceiver.addMessageListener("/tuio/2Dblb", this.on2Dblb);
+        this._tuioReceiver.addMessageListener("/tuio/2Dobj", this.on2Dobj.bind(this));
+        this._tuioReceiver.addMessageListener("/tuio/2Dcur", this.on2Dcur.bind(this));
+        this._tuioReceiver.addMessageListener("/tuio/2Dblb", this.on2Dblb.bind(this));
         this._tuioListeners = [];
 
         this._tuioObjects = new Map();
