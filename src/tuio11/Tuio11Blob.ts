@@ -45,11 +45,11 @@ export class Tuio11Blob extends Tuio11Container {
         return this._rotationAccel;
     }
 
-    private hasChanged(currentTime: TuioTime, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
+    public hasChanged(currentTime: TuioTime, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
         return !(position === this.position && angle === this.angle && size === this.size && area === this.area && velocity === this.velocity && rotationSpeed === this.rotationSpeed && motionAccel === this.motionAccel && rotationAccel === this.rotationAccel);
     }
 
-    private update(currentTime: TuioTime, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
+    public update(currentTime: TuioTime, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
         let lastPoint = this.path[this.path.length - 1];
         let isCalculateSpeeds = (position.x !== this.position.x && velocity.x === 0) || (position.y !== this.position.y && velocity.y === 0);
         this.updateContainer(currentTime, position, velocity, motionAccel, isCalculateSpeeds);
