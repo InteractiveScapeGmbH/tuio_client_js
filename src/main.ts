@@ -1,28 +1,46 @@
-// import './style.css'
-// import typescriptLogo from './typescript.svg'
-// import viteLogo from '/vite.svg'
-// import { setupCounter } from './counter.ts'
+import { TuioTime } from "./common/TuioTime";
+import { WebsocketTuioReceiver } from "./common/WebsocketTuioReceiver";
+import { Tuio11Blob } from "./tuio11/Tuio11Blob";
+import { Tuio11Client } from "./tuio11/Tuio11Client";
+import { Tuio11Cursor } from "./tuio11/Tuio11Cursor";
+import { Tuio11Listener } from "./tuio11/Tuio11Listener";
+import { Tuio11Object } from "./tuio11/Tuio11Object";
 
-import { TuioSession } from "./common/TuioSession";
-import { TuioVersion } from "./common/TuioVersion";
+class DebugTuio11Listener implements Tuio11Listener {
+    addTuioObject(tuioObject: Tuio11Object) {
 
-// document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-//   <div>
-//     <a href="https://vite.dev" target="_blank">
-//       <img src="${viteLogo}" class="logo" alt="Vite logo" />
-//     </a>
-//     <a href="https://www.typescriptlang.org/" target="_blank">
-//       <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-//     </a>
-//     <h1>Vite + TypeScript</h1>
-//     <div class="card">
-//       <button id="counter" type="button"></button>
-//     </div>
-//     <p class="read-the-docs">
-//       Click on the Vite and TypeScript logos to learn more
-//     </p>
-//   </div>
-// `
+    }
 
-// setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
-const session = new TuioSession(TuioVersion.Tuio11, "127.0.0.1", 3333);
+    updateTuioObject(tuioObject: Tuio11Object) {
+    }
+
+    removeTuioObject(tuioObject: Tuio11Object) {
+    }
+
+    addTuioCursor(tuioCursor: Tuio11Cursor) {
+    }
+
+    updateTuioCursor(tuioCursor: Tuio11Cursor) {
+        console.log(tuioCursor.position);
+    }
+
+    removeTuioCursor(tuioCursor: Tuio11Cursor) {
+    }
+
+    addTuioBlob(tuioBlob: Tuio11Blob) {
+    }
+
+    updateTuioBlob(tuioBlob: Tuio11Blob) {
+    }
+
+    removeTuioBlob(tuioBlob: Tuio11Blob) {
+    }
+
+    refresh(frameTime: TuioTime) {
+    }
+
+}
+
+const client = new Tuio11Client(new WebsocketTuioReceiver("ws://127.0.0.1:3333"));
+client.addTuioListener(new DebugTuio11Listener())
+client.connect();
