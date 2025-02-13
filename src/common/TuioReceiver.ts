@@ -16,6 +16,14 @@ export abstract class TuioReceiver {
 
     public abstract disconnect(): void;
 
+    public get isConnected(): boolean {
+        return this._isConnected;
+    }
+
+    protected set isConnected(isConnected: boolean) {
+        this._isConnected = isConnected;
+    }
+
     public onOscMessage(oscMessage: OSC.Message) {
         const messageListeners = this._messageListeners.get(oscMessage.address);
         if (messageListeners !== undefined) {
