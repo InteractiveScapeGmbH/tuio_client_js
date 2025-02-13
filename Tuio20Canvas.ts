@@ -9,7 +9,7 @@ import {TuioTime} from "./src/common/TuioTime";
 import {Tuio20Listener} from "./src/tuio20/Tuio20Listener";
 import {renderSVG} from 'uqr';
 import {Vector} from "vecti";
-import {ScapeXMobile, SxmConfig} from "./src/tuio20/ScapeXMobile";
+import {ScapeXMobile, SxmConfig} from "./src/extensions/ScapeXMobile";
 import {Tuio20Symbol} from "./src/tuio20/Tuio20Symbol";
 
 
