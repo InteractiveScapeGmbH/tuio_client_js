@@ -142,9 +142,9 @@ export class Tuio20Client {
             return;
         }
         const frameId = Number(this._frmMessage.args[0]);
-        const frameTime = this._frmMessage.args[1];
-        const dim = new Vector(Number(this._frmMessage.args[2]), Number(this._frmMessage.args[3]));
-        const source = String(this._frmMessage.args[4]);
+        const frameTime = BigInt(this._frmMessage.args[1]);
+        const dim = Number(this._frmMessage.args[2]);
+        const source = String(this._frmMessage.args[3]);
         let currentFrameTime = TuioTime.fromOscTime(frameTime);
         if (frameId >= this._prevFrameId || frameId === 0 || currentFrameTime.subtract(this._prevFrameTime).getTotalMilliseconds() >= 1000) {
             this._dim = dim;

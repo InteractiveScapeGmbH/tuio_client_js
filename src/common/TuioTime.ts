@@ -9,9 +9,10 @@ export class TuioTime {
         this._microSeconds = microSeconds;
     }
 
-    static fromOscTime(oscTime: any): TuioTime {
-        let seconds = oscTime.raw[0];
-        let microseconds = oscTime.raw[1] / 4294967296;
+    static fromOscTime(oscTime: bigint): TuioTime {
+        let seconds = Number(oscTime >> 32n);
+        const fraction = Number(oscTime & 0xFFFFFFFFn)
+        const microseconds = Math.floor((fraction * 1000000) / Math.pow(2, 32));
         return new TuioTime(seconds, microseconds);
     }
 
