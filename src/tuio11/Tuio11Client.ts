@@ -255,25 +255,35 @@ export class Tuio11Client {
             if (this.updateFrame(fseq)) {
                 if (this._blobAliveMessage !== null) {
                     let currentSessionIds = new Set(this._tuioBlobs.keys());
-                    let aliveSessionIds = new Set(this._blobAliveMessage.args.slice(1).map(arg => arg.value));
+                    let aliveSessionIds = new Set(this._blobAliveMessage.args.slice(1).map(arg => Number(arg)));
                     let removedSessionIds = new Set([...currentSessionIds].filter(x => !aliveSessionIds.has(x)));
                     for (let sessionId of removedSessionIds) {
                         let tuioBlob = this._tuioBlobs.get(sessionId);
-                        tuioBlob._remove(this._currentTime);
-                        for (let tuioListener of this._tuioListeners) {
-                            tuioListener.removeTuioBlob(tuioBlob);
+                        if (tuioBlob) {
+                            tuioBlob.remove(this._currentTime);
+                            for (let tuioListener of this._tuioListeners) {
+                                tuioListener.removeTuioBlob(tuioBlob);
+                            }
+                            this._tuioBlobs.delete(sessionId);
+                            this._freeBlobIds.push(tuioBlob.blobId);
                         }
-                        this._tuioBlobs.delete(sessionId);
-                        this._freeBlobIds.push(tuioBlob.blobId);
                     }
                     this._freeBlobIds.sort();
                     for (let setMessage of this._blobSetMessages) {
-                        let [, s, x, y, a, w, h, f, X, Y, A, m, r] = setMessage.args.map(arg => arg.value);
-                        if (aliveSessionIds.has(s)) {
-                            if (currentSessionIds.has(s)) {
-                                let tuioBlob = this._tuioBlobs.get(s);
-                                if (tuioBlob._hasChanged(this._currentTime, x, y, a, w, h, f, X, Y, A, m, r)) {
-                                    tuioBlob._update(this._currentTime, x, y, a, w, h, f, X, Y, A, m, r);
+                        const sessionId = Number(setMessage.args[1]);
+                        const position = new Vector(Number(setMessage.args[2]), Number(setMessage.args[3]));
+                        const angle = Number(setMessage.args[4]);
+                        const size = new Vector(Number(setMessage.args[5]), Number(setMessage.args[6]));
+                        const area = Number(setMessage.args[7]);
+                        const velocity = new Vector(Number(setMessage.args[8]), Number(setMessage.args[9]));
+                        const rotationSpeed = Number(setMessage.args[10]);
+                        const motionAccel = Number(setMessage.args[11]);
+                        const rotationAccel = Number(setMessage.args[12])
+                        if (aliveSessionIds.has(sessionId)) {
+                            if (currentSessionIds.has(sessionId)) {
+                                let tuioBlob = this._tuioBlobs.get(sessionId);
+                                if (tuioBlob?.hasChanged(this._currentTime, position, angle, size, area, velocity, rotationSpeed, motionAccel, rotationAccel)) {
+                                    tuioBlob?.update(this._currentTime, position, angle, size, area, velocity, rotationSpeed, motionAccel, rotationAccel);
                                     for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioBlob(tuioBlob);
                                     }
@@ -284,8 +294,8 @@ export class Tuio11Client {
                                     blobId = this._freeBlobIds[0];
                                     this._freeBlobIds.splice(0, 1);
                                 }
-                                let tuioBlob = new Tuio11Blob(this._currentTime, s, blobId, x, y, a, w, h, f, X, Y, A, m, r);
-                                this._tuioBlobs.set(s, tuioBlob);
+                                let tuioBlob = new Tuio11Blob(this._currentTime, sessionId, blobId, position, angle, size, area, velocity, rotationSpeed, motionAccel, rotationAccel);
+                                this._tuioBlobs.set(sessionId, tuioBlob);
                                 for (let tuioListener of this._tuioListeners) {
                                     tuioListener.addTuioBlob(tuioBlob);
                                 }
