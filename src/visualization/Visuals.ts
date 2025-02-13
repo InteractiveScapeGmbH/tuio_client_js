@@ -1,7 +1,7 @@
 export class Visuals {
-    private _rgbColor: { r: number; g: number; b: number };
+    private _rgbColor: { r: number; g: number; b: number } | null;
     private _thickness: number[] = [10.0, 5.375, 3.0, 2.125, 2.0];
-;
+    ;
     private _didAppear: boolean;
     private _actFrame: number;
     private _alpha: number[];
