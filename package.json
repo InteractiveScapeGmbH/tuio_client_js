@@ -1,8 +1,14 @@
 {
   "name": "tuio-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "homepage": "https://github.com/InteractiveScapeGmbH/tuio_client_js",
+  "description": "A client implementation of the TUIO 1.1. and TUIO 2.0 protocol.",
+  "keywords": [
+    "tuio",
+    "touch"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
