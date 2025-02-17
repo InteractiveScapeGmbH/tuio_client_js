@@ -11,8 +11,8 @@ export class Tuio11Blob extends Tuio11Container {
     private _rotationSpeed: number;
     private _rotationAccel: number;
 
-    constructor(startTime: TuioTime, blobId: number, symbolId: number, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
-        super(startTime, blobId, position, velocity, motionAccel);
+    constructor(startTime: TuioTime, sessionId: number, blobId: number, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
+        super(startTime, sessionId, position, velocity, motionAccel);
         this._blobId = blobId;
         this._angle = angle;
         this._size = size;
