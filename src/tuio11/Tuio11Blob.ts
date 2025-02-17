@@ -45,7 +45,7 @@ export class Tuio11Blob extends Tuio11Container {
         return this._rotationAccel;
     }
 
-    public hasChanged(currentTime: TuioTime, position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
+    public hasChanged(position: Vector, angle: number, size: Vector, area: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
         return !(position === this.position && angle === this.angle && size === this.size && area === this.area && velocity === this.velocity && rotationSpeed === this.rotationSpeed && motionAccel === this.motionAccel && rotationAccel === this.rotationAccel);
     }
 

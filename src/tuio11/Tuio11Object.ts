@@ -33,7 +33,7 @@ export class Tuio11Object extends Tuio11Container {
         return this._rotationAccel;
     }
 
-    public hasChanged(currentTime: TuioTime, position: Vector, angle: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
+    public hasChanged(position: Vector, angle: number, velocity: Vector, rotationSpeed: number, motionAccel: number, rotationAccel: number) {
         return !(position === this.position && angle === this.angle && velocity === this.velocity && rotationSpeed === this.rotationSpeed && motionAccel === this.motionAccel && rotationAccel === this.rotationAccel);
     }
 

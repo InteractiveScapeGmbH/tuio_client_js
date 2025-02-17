@@ -156,7 +156,7 @@ export class Tuio11Client {
                         if (aliveSessionIds.has(sessionId)) {
                             if (currentSessionIds.has(sessionId)) {
                                 let tuioObject = this._tuioObjects.get(sessionId);
-                                if (tuioObject?.hasChanged(this._currentTime, position, angle, velocity, rotationSpeed, motionAccel, rotationAccel)) {
+                                if (tuioObject?.hasChanged(position, angle, velocity, rotationSpeed, motionAccel, rotationAccel)) {
                                     tuioObject?.update(this._currentTime, position, angle, velocity, rotationSpeed, motionAccel, rotationAccel)
                                     for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioObject(tuioObject);
@@ -214,7 +214,7 @@ export class Tuio11Client {
                         if (aliveSessionIds.has(sessionId)) {
                             if (currentSessionIds.has(sessionId)) {
                                 let tuioCursor = this._tuioCursors.get(sessionId);
-                                if (tuioCursor?.hasChanged(this._currentTime, position, velocity, motionAccel)) {
+                                if (tuioCursor?.hasChanged(position, velocity, motionAccel)) {
                                     tuioCursor?.update(this._currentTime, position, velocity, motionAccel);
                                     for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioCursor(tuioCursor);
@@ -282,7 +282,7 @@ export class Tuio11Client {
                         if (aliveSessionIds.has(sessionId)) {
                             if (currentSessionIds.has(sessionId)) {
                                 let tuioBlob = this._tuioBlobs.get(sessionId);
-                                if (tuioBlob?.hasChanged(this._currentTime, position, angle, size, area, velocity, rotationSpeed, motionAccel, rotationAccel)) {
+                                if (tuioBlob?.hasChanged(position, angle, size, area, velocity, rotationSpeed, motionAccel, rotationAccel)) {
                                     tuioBlob?.update(this._currentTime, position, angle, size, area, velocity, rotationSpeed, motionAccel, rotationAccel);
                                     for (let tuioListener of this._tuioListeners) {
                                         tuioListener.updateTuioBlob(tuioBlob);
