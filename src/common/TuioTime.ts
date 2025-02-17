@@ -1,6 +1,6 @@
 export class TuioTime {
 
-    static _startTime: TuioTime = new TuioTime(0, 0);
+    private static _startTime: TuioTime = new TuioTime(0, 0);
     private _seconds: number;
     private _microSeconds: number;
 
@@ -9,7 +9,7 @@ export class TuioTime {
         this._microSeconds = microSeconds;
     }
 
-    static fromOscTime(oscTime: bigint): TuioTime {
+    public static fromOscTime(oscTime: bigint): TuioTime {
         let seconds = Number(oscTime >> 32n);
         const fraction = Number(oscTime & 0xFFFFFFFFn)
         const microseconds = Math.floor((fraction * 1000000) / Math.pow(2, 32));
@@ -35,12 +35,12 @@ export class TuioTime {
         TuioTime._startTime = TuioTime._getSystemTime();
     }
 
+    public static getCurrentTime(): TuioTime {
+        return TuioTime._getSystemTime().subtract(TuioTime._startTime);
+    }
+
     private static _getSystemTime(): TuioTime {
         let performanceNow = performance.now();
         return new TuioTime(Math.floor(performanceNow / 1000), Math.floor(performanceNow * 1000) % 1000000);
-    }
-
-    public static getCurrentTime(): TuioTime {
-        return TuioTime._getSystemTime().subtract(TuioTime._startTime);
     }
 }
