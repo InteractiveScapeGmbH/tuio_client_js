@@ -1,5 +1,8 @@
 /* Common */
 export { WebsocketTuioReceiver } from "./common/WebsocketTuioReceiver";
+export { TuioReceiver } from "./common/TuioReceiver";
+export { TuioTime } from "./common/TuioTime";
+export { TuioState } from "./common/TuioState"; 
 
 /* Tuio 1.1 */
 export { Tuio11Client } from "./tuio11/Tuio11Client";
