@@ -1,6 +1,6 @@
-import OSC from "osc-js";
+import { OscMessage } from "./OscMessage";
 
-type OscCallback = (oscMessage: OSC.Message) => void;
+type OscCallback = (oscMessage: OscMessage) => void;
 
 export abstract class TuioReceiver {
 
@@ -24,7 +24,7 @@ export abstract class TuioReceiver {
         this._isConnected = isConnected;
     }
 
-    public onOscMessage(oscMessage: OSC.Message) {
+    public onOscMessage(oscMessage: OscMessage) {
         const messageListeners = this._messageListeners.get(oscMessage.address);
         if (messageListeners !== undefined) {
             for (let messageListener of messageListeners) {

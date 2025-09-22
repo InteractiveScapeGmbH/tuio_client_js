@@ -3,9 +3,9 @@ import { Tuio11Cursor } from "./Tuio11Cursor.js";
 import { Tuio11Blob } from "./Tuio11Blob.js";
 import { TuioTime } from "../common/TuioTime.js";
 import { TuioReceiver } from "../common/TuioReceiver.js";
-import OSC from "osc-js";
 import { Vector } from "vecti";
 import { Tuio11Listener } from "./Tuio11Listener.js";
+import { OscMessage } from "../common/OscMessage.js";
 
 export class Tuio11Client {
 
@@ -15,12 +15,12 @@ export class Tuio11Client {
     private _tuioObjects: Map<number, Tuio11Object>;
     private _tuioCursors: Map<number, Tuio11Cursor>;
     private _tuioBlobs: Map<number, Tuio11Blob>;
-    private _objectSetMessages: OSC.Message[];
-    private _cursorSetMessages: OSC.Message[];
-    private _blobSetMessages: OSC.Message[];
-    private _objectAliveMessage: OSC.Message | null;
-    private _cursorAliveMessage: OSC.Message | null;
-    private _blobAliveMessage: OSC.Message | null;
+    private _objectSetMessages: OscMessage[];
+    private _cursorSetMessages: OscMessage[];
+    private _blobSetMessages: OscMessage[];
+    private _objectAliveMessage: OscMessage | null;
+    private _cursorAliveMessage: OscMessage | null;
+    private _blobAliveMessage: OscMessage | null;
     private _freeCursorIds: number[];
     private _freeBlobIds: number[];
     private _tuioListeners: Tuio11Listener[];
@@ -121,7 +121,7 @@ export class Tuio11Client {
         return true;
     }
 
-    on2Dobj(oscMessage: OSC.Message) {
+    on2Dobj(oscMessage: OscMessage) {
         let command = oscMessage.args[0];
         if (command === "set") {
             this._objectSetMessages.push(oscMessage);
@@ -181,7 +181,7 @@ export class Tuio11Client {
         }
     }
 
-    on2Dcur(oscMessage: OSC.Message) {
+    on2Dcur(oscMessage: OscMessage) {
         let command = oscMessage.args[0];
         if (command === "set") {
             this._cursorSetMessages.push(oscMessage);
@@ -244,7 +244,7 @@ export class Tuio11Client {
         }
     }
 
-    on2Dblb(oscMessage: OSC.Message) {
+    on2Dblb(oscMessage: OscMessage) {
         let command = oscMessage.args[0];
         if (command === "set") {
             this._blobSetMessages.push(oscMessage);
