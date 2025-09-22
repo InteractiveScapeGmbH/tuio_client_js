@@ -7,11 +7,12 @@ export class TuioState {
     static Rotating = new TuioState('Rotating');
     static Idle = new TuioState('Idle');
 
-    constructor(name) {
-        this.name = name;
+    private _name: string;
+    constructor(name: string) {
+        this._name = name;
     }
 
     toString() {
-        return `TuioState.${this.name}`;
+        return `TuioState.${this._name}`;
     }
 }

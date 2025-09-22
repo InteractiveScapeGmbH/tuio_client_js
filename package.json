@@ -1,0 +1,43 @@
+{
+  "name": "tuio-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "homepage": "https://github.com/InteractiveScapeGmbH/tuio_client_js",
+  "description": "A client implementation of the TUIO 1.1. and TUIO 2.0 protocol.",
+  "keywords": [
+    "tuio",
+    "touch"
+  ],
+  "main": "dist/tuio-client.cjs.js",
+  "module": "dist/tuio-client.es.js",
+  "types": "dist/tuio-client.d.ts",
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/InteractiveScapeGmbH/tuio_client_js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/InteractiveScapeGmbH/tuio_client_js.git"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "dts-bundle-generator": "^9.5.1",
+    "typescript": "~5.7.2",
+    "vite": "^6.1.0",
+    "vite-plugin-dts": "^4.5.0"
+  },
+  "dependencies": {
+    "uqr": "0.1.2",
+    "vecti": "^3.0.13"
+  }
+}
