@@ -1,6 +1,6 @@
 {
   "name": "tuio-client",
-  "private": true,
+  "private": false,
   "version": "0.1.0",
   "type": "module",
   "homepage": "https://github.com/InteractiveScapeGmbH/tuio_client_js",
