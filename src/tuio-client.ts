@@ -1,5 +1,4 @@
 /* Common */
-export { WebsocketTuioReceiver } from "./common/WebsocketTuioReceiver";
 export { TuioReceiver } from "./common/TuioReceiver";
 export { TuioTime } from "./common/TuioTime";
 export { TuioState } from "./common/TuioState"; 
