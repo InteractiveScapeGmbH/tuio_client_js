@@ -6,16 +6,16 @@ import { Tuio20Bounds } from "./Tuio20Bounds.js";
 import { Tuio20Symbol } from "./Tuio20Symbol.js";
 import { TuioReceiver } from "../common/TuioReceiver.js";
 import { Tuio20Listener } from "./Tuio20Listener.js";
-import OSC from "osc-js";
 import { Vector } from "vecti";
+import { OscMessage } from "../common/OscMessage.js";
 
 export class Tuio20Client {
     _tuioReceiver: TuioReceiver;
     _tuioListeners: Tuio20Listener[];
     _tuioObjects: Map<number, Tuio20Object> = new Map();
 
-    _frmMessage: OSC.Message | null = null;
-    _otherMessages: OSC.Message[] = [];
+    _frmMessage: OscMessage | null = null;
+    _otherMessages: OscMessage[] = [];
     _bundleFrameId: number = 0;
     _nextFrameId: number = 0;
     _prevFrameId: number = 0;
@@ -121,7 +121,7 @@ export class Tuio20Client {
         this._tuioListeners = [];
     }
 
-    _onFrm(oscMessage: OSC.Message) {
+    _onFrm(oscMessage: OscMessage) {
         this._bundleFrameId = Number(oscMessage.args[0]);
         if (this._bundleFrameId > this._nextFrameId) {
             this._otherMessages = [];
@@ -130,14 +130,14 @@ export class Tuio20Client {
         }
     }
 
-    _onOther(oscMessage: OSC.Message) {
+    _onOther(oscMessage: OscMessage) {
         if (this._bundleFrameId !== this._nextFrameId) {
             return;
         }
         this._otherMessages.push(oscMessage);
     }
 
-    _onAlv(oscMessage: OSC.Message) {
+    _onAlv(oscMessage: OscMessage) {
         if (this._frmMessage === null || this._bundleFrameId !== this._nextFrameId) {
             return;
         }
