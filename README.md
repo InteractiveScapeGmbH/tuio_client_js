@@ -25,6 +25,7 @@ tuio20Client.addTuioListener({
     tuioRemove: (tuioObject: Tuio20Object) => { console.log(tuioObject); },
     tuioRefresh: (tuioTime: TuioTime) => { console.log(tuioTime); },
 });
+tuio20Client.connect();
 ```
 
 For this, you need to implement a `TuioReceiver`. Here is an example for a `WebsocketTuioReceiver` that uses [`osc-js`](https://www.npmjs.com/package/osc-js): 
